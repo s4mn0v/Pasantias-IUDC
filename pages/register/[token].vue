@@ -10,7 +10,9 @@ const temporalLinksStore = useTemporalLinksStore()
 const isValidLink = ref(false)
 const error = ref('')
 const linkId = ref('')
+const passwordVisible = ref(false)
 
+// Campos del formulario
 const form = ref({
     nombre: '',
     celular: '',
@@ -19,22 +21,48 @@ const form = ref({
     password: ''
 })
 
-onMounted(async () => {
-    const token = route.params.token
-    try {
-        const link = await temporalLinksStore.getValidLink(token)
-        if (link) {
-            isValidLink.value = true
-            linkId.value = link.id
-        } else {
-            error.value = 'El enlace ha expirado o no es válido'
-        }
-    } catch (e) {
-        error.value = 'Error al verificar el enlace'
-    }
+// Mensajes de error
+const formErrors = ref({
+    correo: '',
+    celular: ''
 })
 
+// Validación de los campos
+function validateForm() {
+    let isValid = true;
+
+    // Validar formato del correo
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.value.correo)) {
+        formErrors.value.correo = 'Por favor ingresa un correo electrónico válido.';
+        isValid = false;
+    } else {
+        formErrors.value.correo = '';
+    }
+
+    // Validar número de celular colombiano
+    const celularRegex = /^3\d{9}$/;
+    if (!celularRegex.test(form.value.celular)) {
+        formErrors.value.celular = 'Por favor ingresa un número celular válido de Colombia (10 dígitos, iniciando con 3).';
+        isValid = false;
+    } else {
+        formErrors.value.celular = '';
+    }
+
+    return isValid;
+}
+
+// Filtrar entrada de celular para permitir solo números
+function filterCelularInput(event) {
+    const input = event.target.value;
+    // Solo mantener los dígitos
+    event.target.value = input.replace(/\D/g, '');
+    form.value.celular = event.target.value;
+}
+
 async function handleSubmit() {
+    if (!validateForm()) return; // Detener si hay errores de validación
+
     try {
         await temporalLinksStore.markLinkAsUsed(linkId.value, form.value);
         await useFirestoreOperations().crearEmpresaConUsuario(
@@ -54,6 +82,21 @@ async function handleSubmit() {
         error.value = 'Error al registrar la empresa';
     }
 }
+
+onMounted(async () => {
+    const token = route.params.token
+    try {
+        const link = await temporalLinksStore.getValidLink(token)
+        if (link) {
+            isValidLink.value = true
+            linkId.value = link.id
+        } else {
+            error.value = 'El enlace ha expirado o no es válido'
+        }
+    } catch (e) {
+        error.value = 'Error al verificar el enlace'
+    }
+})
 </script>
 
 <template>
@@ -76,16 +119,27 @@ async function handleSubmit() {
                 <div>
                     <input v-model="form.correo" type="email" placeholder="Correo electrónico" required
                         class="w-full px-4 py-2 rounded border border-gray-400 shadow-sm outline-none">
+                    <span v-if="formErrors.correo" class="text-red-500 text-sm">{{ formErrors.correo }}</span>
                 </div>
 
-                <div>
-                    <input v-model="form.password" type="password" placeholder="Contraseña" required
-                        class="w-full px-4 py-2 rounded border border-gray-400 shadow-sm outline-none">
+                <div class="relative">
+                    <input v-model="form.password" :type="passwordVisible ? 'text' : 'password'" 
+                           placeholder="Contraseña" required
+                           class="w-full px-4 py-2 rounded border border-gray-400 shadow-sm outline-none">
+                    <button type="button" @click="passwordVisible = !passwordVisible" 
+                            class="absolute inset-y-0 right-0 flex items-center px-3">
+                        <Icon
+                          :name="passwordVisible ? 'uil:eye-slash' : 'uil:eye'"
+                          class="w-5 h-5 text-purple-700"
+                        />
+                    </button>
                 </div>
 
                 <div>
                     <input v-model="form.celular" type="tel" placeholder="Celular" required
+                        @input="filterCelularInput"
                         class="w-full px-4 py-2 rounded border border-gray-400 shadow-sm outline-none">
+                    <span v-if="formErrors.celular" class="text-red-500 text-sm">{{ formErrors.celular }}</span>
                 </div>
 
                 <div>

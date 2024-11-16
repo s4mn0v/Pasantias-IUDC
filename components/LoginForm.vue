@@ -5,42 +5,82 @@
         <img src="/assets/img/login.jpg" alt="login" class="object-cover w-full h-full rounded-r-lg">
       </div>
       <div class="w-full md:w-1/2 p-8 flex flex-col justify-center">
-        <h1 class="text-4xl font-bold mb-8">Bienvenido</h1>
+        <h1 class="text-4xl font-extrabold mb-8 uppercase text-center tracking-wider">Bienvenido</h1> 
         <form @submit.prevent="signIn" class="space-y-6">
-          <div>
-            <label for="email" class="block text-gray-700 font-bold mb-2">Email</label>
+          <!-- Notificaciones de error -->
+          <div
+            v-if="error.email"
+            class="flex items-center justify-between bg-red-100 border border-red-400 text-red-700 px-4 py-3 my-2 rounded"
+            role="alert"
+          >
+            <span class="block sm:inline pl-2">
+              <strong class="font-bold">{{ error.email }}</strong>
+            </span>
+            <span class="inline cursor-pointer" @click="closeMessage('email')">
+              <Icon name="uil:multiply" />
+            </span>
+          </div>
+          <div
+            v-if="error.password"
+            class="flex items-center justify-between bg-red-100 border border-red-400 text-red-700 px-4 py-3 my-2 rounded"
+            role="alert"
+          >
+            <span class="block sm:inline pl-2">
+              <strong class="font-bold">{{ error.password }}</strong>
+            </span>
+            <span class="inline cursor-pointer" @click="closeMessage('password')">
+              <Icon name="uil:multiply" />
+            </span>
+          </div>
+          <div
+            v-if="error.general"
+            class="flex items-center justify-between bg-red-100 border border-red-400 text-red-700 px-4 py-3 my-2 rounded"
+            role="alert"
+          >
+            <span class="block sm:inline pl-2">
+              <strong class="font-bold">{{ error.general }}</strong>
+            </span>
+            <span class="inline cursor-pointer" @click="closeMessage('general')">
+              <Icon name="uil:multiply" />
+            </span>
+          </div>
+
+          <div class="relative">
+            <!-- Icono de usuario -->
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+              <Icon name="uil:user" class="w-5 h-5 text-gray-400" />
+            </span>
             <input
               id="email"
               v-model="email"
               type="email"
-              class="border border-gray-300 shadow p-3 w-full rounded mb- outline-none"
+              class="border border-gray-300 shadow p-3 w-full pl-10 rounded mb- outline-none"
               placeholder="Ingresa tu email"
               required
             />
-            <p v-if="error.email" class="text-red-500 text-sm mt-1">{{ error.email }}</p>
           </div>
-          <div>
-            <label for="password" class="block text-gray-700 font-bold mb-2">Contraseña</label>
-            <div class="relative">
-              <input
-                :type="passwordVisible ? 'text' : 'password'"
-                id="password"
-                v-model="password"
-                class="border border-gray-300 shadow p-3 w-full rounded mb- outline-none"
-                placeholder="••••••••"
-                required
+          <div class="relative">
+            <!-- Icono de candado -->
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center">
+              <Icon name="uil:lock-alt" class="w-5 h-5 text-gray-400" />
+            </span>
+            <input
+              :type="passwordVisible ? 'text' : 'password'"
+              id="password"
+              v-model="password"
+              class="border border-gray-300 shadow p-3 w-full pl-10 rounded mb- outline-none"
+              placeholder="••••••••"
+              required
+            />
+            <span
+              @click="togglePasswordVisibility"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-purple-700"
+            >
+              <Icon
+                :name="passwordVisible ? 'uil:eye-slash' : 'uil:eye'"
+                class="w-5 h-5 text-purple-700"
               />
-              <span
-                @click="togglePasswordVisibility"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-purple-700"
-              >
-                <Icon
-                  :name="passwordVisible ? 'uil:eye-slash' : 'uil:eye'"
-                  class="w-5 h-5 text-purple-700"
-                />                
-              </span>
-            </div>
-            <p v-if="error.password" class="text-red-500 text-sm mt-1">{{ error.password }}</p>
+            </span>
           </div>
           <button
             type="submit"
@@ -50,23 +90,29 @@
             {{ isLoading ? 'Procesando...' : 'Iniciar sesión' }}
           </button>
         </form>
-        <p v-if="error.general" class="text-red-500 text-center mt-4">{{ error.general }}</p>
-        <div class="text-gray-500 flex text-center flex-col mt-4 items-center text-sm">
-          <p class="cursor-default">
-            Al iniciar sesión, aceptas nuestros
-            <a class="group text-blue-400 transition-all duration-100 ease-in-out" href="#">
-              <span class="cursor-pointer bg-left-bottom bg-gradient-to-r from-blue-400 to-blue-400 bg-[length:0%_2px] bg-no-repeat group-hover:bg-[length:100%_2px] transition-all duration-500 ease-out">
-                Términos
-              </span>
-            </a>
-            y
-            <a class="group text-blue-400 transition-all duration-100 ease-in-out" href="#">
-              <span class="cursor-pointer bg-left-bottom bg-gradient-to-r from-blue-400 to-blue-400 bg-[length:0%_2px] bg-no-repeat group-hover:bg-[length:100%_2px] transition-all duration-500 ease-out">
-                Política de Privacidad
-              </span>
-            </a>
-          </p>
+
+        <!-- Mensajes de error de restablecimiento de contraseña -->
+        <div
+          v-if="error.reset"
+          class="flex items-center justify-between bg-teal-100 border border-teal-400 text-teal-700 px-4 py-3 my-2 rounded"
+          role="alert"
+        >
+          <span class="block sm:inline pl-2">
+            <strong class="font-bold">{{ error.reset }}</strong>
+          </span>
+          <span class="inline cursor-pointer" @click="closeMessage('reset')">
+            <Icon name="uil:multiply" />
+          </span>
         </div>
+
+        <p class="text-center mt-4">
+          <button
+            class="text-sm text-blue-400 hover:text-blue-600"
+            @click="resetPassword"
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
+        </p>
       </div>
     </div>
   </div>
@@ -83,7 +129,8 @@ const passwordVisible = ref(false);
 const error = ref({
   email: '',
   password: '',
-  general: ''
+  general: '',
+  reset: '', // Para errores de restablecimiento de contraseña
 });
 const router = useRouter();
 
@@ -96,7 +143,8 @@ async function signIn() {
   error.value = {
     email: '',
     password: '',
-    general: ''
+    general: '',
+    reset: '',
   };
 
   // Elimina espacios en blanco al inicio y final de los valores
@@ -150,5 +198,40 @@ async function signIn() {
   } finally {
     isLoading.value = false;
   }
+}
+
+async function resetPassword() {
+  // Limpiar errores previos
+  error.value.reset = '';
+  error.value.general = '';
+
+  // Validar si el correo está vacío
+  if (!email.value.trim()) {
+    error.value.email = 'Por favor, ingresa tu correo para restablecer la contraseña.';
+    return;
+  }
+
+  // Llamar a Firebase para enviar el correo de restablecimiento
+  try {
+    const { getAuth, sendPasswordResetEmail } = await import('firebase/auth');
+    const auth = getAuth();
+
+    await sendPasswordResetEmail(auth, email.value);
+    error.value.reset =
+      'Se ha enviado un correo para restablecer tu contraseña. Revisa tu bandeja de entrada.';
+  } catch (e) {
+    if (e.code === 'auth/invalid-email') {
+      error.value.email = 'El correo ingresado no es válido.';
+    } else if (e.code === 'auth/user-not-found') {
+      error.value.email = 'No hay una cuenta asociada a este correo.';
+    } else {
+      error.value.general = 'Hubo un error al intentar restablecer la contraseña.';
+    }
+    console.error(e.message);
+  }
+}
+
+function closeMessage(type) {
+  error.value[type] = ''; // Ocultar el mensaje de error
 }
 </script>

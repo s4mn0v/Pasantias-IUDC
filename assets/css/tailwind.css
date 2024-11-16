@@ -3,5 +3,6 @@
 @tailwind utilities;
 
 h1 {
-    color: rgb(3 7 18);
+    /* color: rgb(3 7 18); */
+    color: rgb(168 85 247);
 }
