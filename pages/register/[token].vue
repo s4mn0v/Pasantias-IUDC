@@ -18,14 +18,23 @@ const form = ref({
     celular: '',
     correo: '',
     ubicacion: '',
-    password: ''
+    password: '',
+    nit: ''
 })
 
 // Mensajes de error
 const formErrors = ref({
     correo: '',
-    celular: ''
+    celular: '',
+    nit: ''
 })
+
+// Validación de NIT
+function validateNIT(nit) {
+    // El NIT colombiano generalmente tiene 9 a 12 dígitos, y no debe contener letras.
+    const nitRegex = /^[0-9]{9,12}$/;
+    return nitRegex.test(nit);
+}
 
 // Validación de los campos
 function validateForm() {
@@ -49,6 +58,17 @@ function validateForm() {
         formErrors.value.celular = '';
     }
 
+    // Validar NIT
+    if (!form.value.nit) {
+        formErrors.value.nit = 'Por favor ingresa el NIT de la empresa.';
+        isValid = false;
+    } else if (!validateNIT(form.value.nit)) {
+        formErrors.value.nit = 'Por favor ingresa un NIT válido (solo números, entre 9 y 12 dígitos).';
+        isValid = false;
+    } else {
+        formErrors.value.nit = '';
+    }
+
     return isValid;
 }
 
@@ -60,8 +80,16 @@ function filterCelularInput(event) {
     form.value.celular = event.target.value;
 }
 
+// Filtrar entrada de NIT para permitir solo números
+function filterNITInput(event) {
+    const input = event.target.value;
+    // Solo mantener los dígitos
+    event.target.value = input.replace(/\D/g, '');
+    form.value.nit = event.target.value;
+}
+
 async function handleSubmit() {
-    if (!validateForm()) return; // Detener si hay errores de validación
+    if (!validateForm()) return;
 
     try {
         await temporalLinksStore.markLinkAsUsed(linkId.value, form.value);
@@ -71,13 +99,20 @@ async function handleSubmit() {
                 ubicacion: form.value.ubicacion,
                 celular: form.value.celular,
                 correo: form.value.correo,
+                nit: form.value.nit,
             },
             {
                 email: form.value.correo,
                 password: form.value.password,
             }
         );
-        router.push('/registro-exitoso');
+        // Primero navegamos a la página de éxito
+        await router.push('/registro-exitoso');
+        // Luego recargamos la página usando navigateTo con la opción de recarga
+        await navigateTo(window.location.pathname, {
+            replace: true,
+            external: true
+        });
     } catch (e) {
         error.value = 'Error al registrar la empresa';
     }
@@ -123,21 +158,17 @@ onMounted(async () => {
                 </div>
 
                 <div class="relative">
-                    <input v-model="form.password" :type="passwordVisible ? 'text' : 'password'" 
-                           placeholder="Contraseña" required
-                           class="w-full px-4 py-2 rounded border border-gray-400 shadow-sm outline-none">
-                    <button type="button" @click="passwordVisible = !passwordVisible" 
-                            class="absolute inset-y-0 right-0 flex items-center px-3">
-                        <Icon
-                          :name="passwordVisible ? 'uil:eye-slash' : 'uil:eye'"
-                          class="w-5 h-5 text-purple-700"
-                        />
+                    <input v-model="form.password" :type="passwordVisible ? 'text' : 'password'"
+                        placeholder="Contraseña" required
+                        class="w-full px-4 py-2 rounded border border-gray-400 shadow-sm outline-none">
+                    <button type="button" @click="passwordVisible = !passwordVisible"
+                        class="absolute inset-y-0 right-0 flex items-center px-3">
+                        <Icon :name="passwordVisible ? 'uil:eye-slash' : 'uil:eye'" class="w-5 h-5 text-purple-700" />
                     </button>
                 </div>
 
                 <div>
-                    <input v-model="form.celular" type="tel" placeholder="Celular" required
-                        @input="filterCelularInput"
+                    <input v-model="form.celular" type="tel" placeholder="Celular" required @input="filterCelularInput"
                         class="w-full px-4 py-2 rounded border border-gray-400 shadow-sm outline-none">
                     <span v-if="formErrors.celular" class="text-red-500 text-sm">{{ formErrors.celular }}</span>
                 </div>
@@ -145,6 +176,13 @@ onMounted(async () => {
                 <div>
                     <input v-model="form.ubicacion" type="text" placeholder="Ubicación" required
                         class="w-full px-4 py-2 rounded border border-gray-400 shadow-sm outline-none">
+                </div>
+
+                <div>
+                    <input v-model="form.nit" type="text" placeholder="NIT de la empresa" required
+                        @input="filterNITInput"
+                        class="w-full px-4 py-2 rounded border border-gray-400 shadow-sm outline-none">
+                    <span v-if="formErrors.nit" class="text-red-500 text-sm">{{ formErrors.nit }}</span>
                 </div>
 
                 <button type="submit"

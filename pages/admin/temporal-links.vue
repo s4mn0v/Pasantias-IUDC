@@ -19,7 +19,8 @@ const displayedLinks = computed(() => {
     case 'active':
       return temporalLinksStore.activeLinks
     case 'expired':
-      return temporalLinksStore.expiredLinks
+      // Filtra los enlaces expirados, excluyendo los que están usados
+      return temporalLinksStore.expiredLinks.filter(link => !link.used)
     case 'used':
       return temporalLinksStore.usedLinks
     default:
@@ -45,7 +46,9 @@ function copyToClipboard(url) {
 }
 
 function formatDate(date) {
-  return new Date(date).toLocaleString()
+  return new Date(date).toLocaleString('es-CO', {
+    weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+  })
 }
 
 function getTimeRemaining(expirationDate) {
@@ -70,33 +73,39 @@ async function deleteLink(linkId) {
 }
 </script>
 
+
 <template>
   <div class="container mx-auto p-8">
-    <h1 class="text-3xl font-bold mb-8 text-purple-500">Enlaces Temporales</h1>
+    <div class="flex justify-between items-center mb-8 content-center">
+      <h1 class="text-3xl text-purple-500 uppercase tracking-wider font-extrabold">Enlaces Temporales</h1>
+      <div class="text-sm text-gray-500">
+        {{ formatDate(new Date()) }}
+      </div>
+    </div>
 
-    <div class="bg-gray-800 rounded-lg p-6 mb-8">
-      <div class="flex items-center gap-4 mb-4">
-        <div class="flex-1">
-          <label class="block text-white mb-2">Minutos hasta expiración (5-60):</label>
-          <input v-model="minutes" type="number" min="5" max="60"
-            class="w-full px-4 py-2 rounded bg-gray-700 text-white border border-gray-600">
-        </div>
+    <div class="border drop-shadow-lg bg-slate-50 rounded-lg p-6 mb-8">
+      <p class="mb-4">Minutos hasta expiración (5-60):</p>
+      <div class="flex w-full h-auto space-x-7">
+        <input v-model="minutes" type="number" min="5" max="60" class="w-full px-4 py-2 rounded border"/>
+
         <button @click="generateLink" :disabled="!temporalLinksStore.canCreateNewLink"
-          class="h-fit bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600 transition duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed">
-          Generar Enlace
+          class="bg-purple-500 p-3 rounded-full hover:bg-purple-600 transition duration-300 disabled:bg-gray-500 disabled:cursor-not-allowed flex items-center justify-center text-white"
+          title="Generar un nuevo enlace">
+          <Icon name="uil:plus" class="w-6 h-6" />
         </button>
       </div>
 
       <div v-if="!temporalLinksStore.canCreateNewLink" class="text-yellow-500 mb-4">
-        Has alcanzado el límite de 5 enlaces activos
+        Has alcanzado el límite de 5 enlaces activos, por favor elimina algunos enlaces.
       </div>
 
       <div v-if="newLinkUrl" class="mt-6">
         <div class="flex items-center justify-between bg-gray-700 p-4 rounded">
-          <div class="text-white break-all mr-4">{{ newLinkUrl }}</div>
+          <div class="text-white break-all mr-4">{{ newLinkUrl.slice(110) }}</div>
           <button @click="copyToClipboard(newLinkUrl)"
-            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300">
-            Copiar
+            class="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition duration-300 flex items-center justify-center"
+            title="Copiar URL">
+            <Icon name="uil:copy" class="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -119,7 +128,7 @@ async function deleteLink(linkId) {
     </div>
 
     <!-- Links List -->
-    <div v-if="temporalLinksStore.isLoading" class="text-center text-white">
+    <div v-if="temporalLinksStore.isLoading" class="text-center">
       Cargando...
     </div>
 
@@ -129,42 +138,45 @@ async function deleteLink(linkId) {
 
     <div v-else class="space-y-4">
       <div v-for="link in displayedLinks" :key="link.id"
-        class="bg-gray-800 rounded-lg p-4 flex items-center justify-between">
+        class="rounded-lg p-4 flex items-center justify-between space-x-10 border drop-shadow-lg bg-slate-50">
         <div class="flex-1">
-          <p class="text-white">
-            URL: {{ `${baseUrl}/register/${link.token}` }}
-          </p>
-          <p class="text-gray-400 text-sm">
-            Creado: {{ formatDate(link.createdAt) }}
-          </p>
-          <p class="text-gray-400 text-sm">
-            Expira: {{ formatDate(link.expirationDate) }}
-            <span v-if="!link.used && new Date(link.expirationDate) > new Date()" class="text-green-500">
-              ({{ getTimeRemaining(link.expirationDate) }})
-            </span>
-          </p>
-          <p v-if="link.used && link.companyData" class="text-white">
+          <div class="flex justify-between sm:flex-1">
+            <p class="flex items-center justify-between space-x-5">
+              <span>
+                <Icon name="uil:link" class="w-4 h-4 mr-2 text-green-700" /> ID: {{
+                  `${baseUrl}/register/${link.token}`.slice(110)
+                }}
+              </span>
+              <span v-if="!link.used && new Date(link.expirationDate) > new Date()" class="text-fuchsia-700">
+                ({{ getTimeRemaining(link.expirationDate) }})
+              </span>
+            </p>
+            <div class="flex space-x-4">
+              <p class="text-gray-500 text-sm">
+                Creado: {{ formatDate(link.createdAt) }}
+              </p>
+              <p class="text-gray-500 text-sm">
+                Expira: {{ formatDate(link.expirationDate) }}
+              </p>
+            </div>
+          </div>
+          <p v-if="link.used && link.companyData">
             Nombre de la empresa: {{ link.companyData.nombre }}
           </p>
-          <p v-if="link.used && link.companyData" class="text-gray-400 text-sm">
-            Correo: {{ link.companyData.correo }}
-          </p>
-          <p v-if="link.used && link.companyData" class="text-gray-400 text-sm">
-            Celular: {{ link.companyData.celular }}
-          </p>
-          <p v-if="link.used && link.companyData" class="text-gray-400 text-sm">
-            Ubicación: {{ link.companyData.ubicacion }}
-          </p>
+          <p v-if="link.used && link.companyData">NIT: {{ link.companyData.nit }}</p>
         </div>
 
         <div class="flex gap-2">
           <button @click="copyToClipboard(`${baseUrl}/register/${link.token}`)"
-            class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition duration-300">
-            Copiar
+            class="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition duration-300 flex items-center justify-center"
+            title="Copiar enlace">
+            <Icon name="uil:copy" class="w-5 h-5" />
           </button>
+
           <button @click="deleteLink(link.id)"
-            class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-300">
-            Eliminar
+            class="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition duration-300 flex items-center justify-center"
+            title="Eliminar enlace">
+            <Icon name="uil:trash-alt" class="w-5 h-5" />
           </button>
         </div>
       </div>

@@ -6,7 +6,8 @@
         </div>
 
         <!-- Columna derecha ocupando 1/3 del ancho -->
-        <div class="flex flex-col overflow-hidden">
+        <!-- Ocultar esta columna en pantallas menores a lg -->
+        <div class="hidden lg:flex flex-col overflow-hidden">
             <EmpresaPasantes />
         </div>
     </div>

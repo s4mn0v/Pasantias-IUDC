@@ -25,7 +25,7 @@
         <!-- Botón de Cerrar Sesión en el lado derecho -->
         <div class="hidden md:flex ">
           <button @click="logout"
-            class="bg-red-600 hover:bg-red-700 text-white font-bold p-2 rounded-full transition-colors duration-200 justify-center items-center flex">
+            class="bg-red-600 hover:bg-red-700 text-white font-bold p-2 rounded-full transition-colors duration-200 justify-center items-center flex"  title="Cerrar sesion">
             <Icon name="uil:exit" class="w-5 h-5" />
           </button>
         </div>
@@ -48,8 +48,11 @@
       <NuxtLink to="/empresa/reportes" class="block text-lg font-semibold text-gray-700 hover:text-purple-500 transition">
         Reportes
       </NuxtLink>
+      <NuxtLink to="/empresa/pasantes" class="block text-lg font-semibold text-gray-700 hover:text-purple-500 transition">
+        Pasantes
+      </NuxtLink>
       <button @click="logout"
-        class="w-full text-left bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 mt-2">
+        class="w-full text-left bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 mt-2" title="Cerrar sesion">
         Cerrar Sesión
       </button>
     </div>
