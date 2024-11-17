@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import { useFirestoreOperations } from "~/composables/useFirestoreOperations.ts";
+import xlsx from 'node-xlsx';
 
 const {
     getPasantes,
@@ -25,6 +26,7 @@ const nuevoPasante = ref({
 });
 const editandoPasante = ref(null);
 const mostrarFormulario = ref(false);
+const mostrarPopup = ref(false);
 
 onMounted(async () => {
     pasantes.value = await getPasantes();
@@ -47,6 +49,11 @@ const pasantesFiltrados = computed(() => {
 async function agregarPasante() {
     await crearPasante(nuevoPasante.value);
     pasantes.value = await getPasantes();
+    resetNuevoPasante();
+    mostrarPopup.value = false;
+}
+
+function resetNuevoPasante() {
     nuevoPasante.value = {
         nombre: "",
         cedula: "",
@@ -55,7 +62,6 @@ async function agregarPasante() {
         semestre: "",
         celular: "",
     };
-    mostrarFormulario.value = false;
 }
 
 function iniciarEdicion(pasante) {
@@ -86,6 +92,33 @@ async function removerEmpresa(pasanteId, empresaId) {
     await removerPasanteDeEmpresa(pasanteId, empresaId);
     pasantes.value = await getPasantes();
 }
+
+function handleFileUpload(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = xlsx.parse(data);
+        const sheet = workbook[0];
+        const jsonData = sheet.data.slice(1).map(row => ({
+            nombre: row[0],
+            cedula: row[1],
+            correo: row[2],
+            carrera: row[3],
+            semestre: row[4],
+            celular: row[5]
+        }));
+
+        for (const pasante of jsonData) {
+            await crearPasante(pasante);
+        }
+
+        pasantes.value = await getPasantes();
+    };
+
+    reader.readAsArrayBuffer(file);
+}
 </script>
 
 <template>
@@ -99,34 +132,46 @@ async function removerEmpresa(pasanteId, empresaId) {
                 <input v-model="filtro" type="text" placeholder="Buscar por nombre o cédula"
                     class="w-full px-3 py-2 mb-6 bg-gray-100 text-gray-800 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
 
-                <button @click="mostrarFormulario = !mostrarFormulario"
-                    class="mb-6 bg-purple-600 text-white font-bold py-2 px-4 rounded-md hover:bg-purple-700 transition duration-300 ease-in-out w-full">
-                    {{ mostrarFormulario ? "Cancelar" : "Agregar Pasante" }}
-                </button>
-
-                <form v-if="mostrarFormulario" @submit.prevent="
-                    editandoPasante ? guardarEdicion() : agregarPasante()
-                    " class="space-y-4 mb-8">
-                    <div v-for="field in [
-                        'nombre',
-                        'cedula',
-                        'correo',
-                        'carrera',
-                        'semestre',
-                        'celular',
-                    ]" :key="field">
-                        <label :for="field" class="block text-sm font-medium text-gray-700 mb-1">
-                            {{ field.charAt(0).toUpperCase() + field.slice(1) }}
-                        </label>
-                        <input :id="field" v-model="pasanteActual[field]" :type="field === 'correo' ? 'email' : 'text'"
-                            required
-                            class="w-full px-3 py-2 bg-gray-100 text-gray-800 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
-                    </div>
-                    <button type="submit"
-                        class="w-full bg-purple-600 text-white font-bold py-2 px-4 rounded-md hover:bg-purple-700">
-                        {{ editandoPasante ? "Guardar Cambios" : "Agregar Pasante" }}
+                <div class="flex space-x-4 mb-6">
+                    <button @click="mostrarPopup = true"
+                        class="flex-1 bg-purple-600 text-white font-bold py-2 px-4 rounded-md hover:bg-purple-700 transition duration-300 ease-in-out">
+                        Agregar Pasante
                     </button>
-                </form>
+                    <label for="file-upload"
+                        class="flex-1 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition duration-300 ease-in-out text-center cursor-pointer">
+                        Cargar XLSX
+                    </label>
+                    <input id="file-upload" type="file" accept=".xlsx" @change="handleFileUpload" class="hidden" />
+                </div>
+
+                <!-- Pop-up para agregar pasante manualmente -->
+                <div v-if="mostrarPopup"
+                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+                        <h2 class="text-2xl font-bold mb-4">Agregar Pasante</h2>
+                        <form @submit.prevent="agregarPasante" class="space-y-4">
+                            <div v-for="field in ['nombre', 'cedula', 'correo', 'carrera', 'semestre', 'celular']"
+                                :key="field">
+                                <label :for="field" class="block text-sm font-medium text-gray-700 mb-1">
+                                    {{ field.charAt(0).toUpperCase() + field.slice(1) }}
+                                </label>
+                                <input :id="field" v-model="nuevoPasante[field]"
+                                    :type="field === 'correo' ? 'email' : 'text'" required
+                                    class="w-full px-3 py-2 bg-gray-100 text-gray-800 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                            </div>
+                            <div class="flex space-x-4">
+                                <button type="submit"
+                                    class="flex-1 bg-purple-600 text-white font-bold py-2 px-4 rounded-md hover:bg-purple-700">
+                                    Agregar Pasante
+                                </button>
+                                <button @click="mostrarPopup = false" type="button"
+                                    class="flex-1 bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-400">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
 
                 <div class="space-y-4">
                     <div v-for="pasante in pasantesFiltrados" :key="pasante.id"
@@ -153,11 +198,11 @@ async function removerEmpresa(pasanteId, empresaId) {
                         <p class="text-gray-700">Celular: {{ pasante.celular }}</p>
                         <div class="mt-2">
                             <select @change="($event) =>
-                                    asignarEmpresa(
-                                        pasante.id,
-                                        $event.target.value,
-                                        empresas.find((e) => e.id === $event.target.value)?.nombre
-                                    )
+                                asignarEmpresa(
+                                    pasante.id,
+                                    $event.target.value,
+                                    empresas.find((e) => e.id === $event.target.value)?.nombre
+                                )
                                 " class="w-full bg-gray-100 text-gray-800 border border-gray-300 rounded-md py-2 px-3">
                                 <option value="">Seleccionar empresa</option>
                                 <option v-for="empresa in empresas" :key="empresa.id" :value="empresa.id"
