@@ -144,8 +144,8 @@ function toggleCard(empresaId) {
           <input v-model="searchQuery" type="text" placeholder="Buscar empresa..."
             class="bg-transparent w-full focus:outline-none pr-4 border-0 focus:ring-0 px-0 py-0">
           <button
-            class="flex flex-row items-center justify-center min-w-[130px] px-4 rounded-full border disabled:cursor-not-allowed disabled:opacity-50 transition ease-in-out duration-150 text-base bg-black text-white font-medium tracking-wide border-transparent py-1.5 h-[38px] -mr-3">
-            Buscar
+            class="flex flex-row items-center justify-center px-4 rounded-full border disabled:cursor-not-allowed disabled:opacity-50 transition ease-in-out duration-150 text-base bg-purple-500 text-white font-medium tracking-wide border-transparent py-1.5 h-[38px] -mr-3">
+            <Icon name="uil:search" class="w-5 h-5" />
           </button>
         </div>
 

@@ -32,6 +32,9 @@
   - login.vue
 - stores/
   - useTemporalLinks.ts
+- app.vue
+- error.vue
+- nuxt.config.ts
 
 # Install vuefire and nuxt firebase
 ```
