@@ -126,10 +126,14 @@ function cerrarPopup() {
 
 async function borrarEmpresa(id) {
   if (confirm('¿Estás seguro de que quieres eliminar esta empresa?')) {
-    await eliminarEmpresa(id)
-    await refreshData()
+    const pasantesAsociados = pasantes.value.filter(p => p.empresaId === id);
+    for (const pasante of pasantesAsociados) {
+      await removerPasanteDeEmpresa(pasante.id, id); // Remover relaciones con pasantes
+    }
+    await eliminarEmpresa(id); // Eliminar empresa
+    await refreshData(); // Refrescar datos
     if (currentPage.value > totalPages.value) {
-      currentPage.value = totalPages.value
+      currentPage.value = totalPages.value;
     }
   }
 }

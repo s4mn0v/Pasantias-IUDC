@@ -1,6 +1,6 @@
 <!-- components/admin/pasantes/PasantesUploadPopup.vue -->
 <template>
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 m-0">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
             <h2 class="text-2xl font-bold mb-4">Cargar XLSX</h2>
             <input type="file" accept=".xlsx" @change="handleFileUpload" class="mb-4" />

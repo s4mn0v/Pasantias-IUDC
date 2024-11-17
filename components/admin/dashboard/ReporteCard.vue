@@ -53,7 +53,8 @@ const handleDelete = async () => {
 </script>
 
 <template>
-  <div @click="toggleModal" class="rounded-lg p-4 shadow border h-full flex flex-col justify-between cursor-pointer bg-white">
+  <div @click="toggleModal"
+    class="rounded-lg p-4 shadow border h-full flex flex-col justify-between cursor-pointer bg-white">
     <div class="flex justify-between items-center mb-2">
       <h2 class="text-xl font-semibold line-clamp-2">{{ pasanteName }}</h2>
       <span class="flex items-center">
@@ -64,7 +65,7 @@ const handleDelete = async () => {
     <div class="bg-gray-300 h-[1px] w-full my-2"></div>
     <p class="mb-2 line-clamp-3">{{ reporte.contenido }}</p>
     <div class="flex justify-between text-sm text-gray-400">
-      <p>Empresa: {{ empresaName }}</p>
+      <p>Empresa: {{ empresaName.slice(0, 25) }}</p>
       <p>Fecha: {{ new Date(reporte.fecha).toLocaleDateString() }}</p>
     </div>
 
@@ -79,8 +80,9 @@ const handleDelete = async () => {
           </div>
         </div>
         <div class="bg-gray-300 h-[1px] w-full my-4"></div>
+          <p class="text-gray-400 text-sm">Empresa: {{ empresaName }}</p>
         <p class="mb-4">{{ reporte.contenido }}</p>
-        
+
         <!-- Botón de eliminar -->
         <div class="flex justify-end mt-4">
           <a @click.stop="handleDelete"
