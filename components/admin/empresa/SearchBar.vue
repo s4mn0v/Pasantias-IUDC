@@ -10,13 +10,6 @@
                 <Icon name="uil:search" class="w-5 h-5" />
             </button>
         </div>
-
-        <NuxtLink to="./temporal-links">
-            <button
-                class="flex items-center justify-center w-11 h-11 rounded-full border border-gray-300 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 transition-all duration-300">
-                <Icon name="uil:plus-circle" class="w-5 h-5 text-gray-500" />
-            </button>
-        </NuxtLink>
     </div>
 </template>
 

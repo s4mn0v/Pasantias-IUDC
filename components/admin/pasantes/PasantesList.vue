@@ -37,15 +37,15 @@
             </p>
             <div class="mt-2 flex items-center space-x-4">
                 <button @click="openAssignCompanyPopup(pasante)"
-                    class="bg-purple-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-purple-700 flex items-center justify-center h-9"
+                    class="bg-purple-600 text-white font-semibold py-6 px-4 rounded-md hover:bg-purple-700 flex items-center justify-center h-9"
                     :title="pasante.empresaId ? 'Cambiar Empresa' : 'Asignar Empresa'">
-                    <Icon :name="pasante.empresaId ? 'uil:sync' : 'uil:building'" class="mr-2" />
+                    <Icon :name="pasante.empresaId ? 'uil:sync' : 'uil:building'" class="mr-2 w-6 h-6" />
                     {{ pasante.empresaId ? 'Cambiar Empresa' : 'Asignar Empresa' }}
                 </button>
 
                 <button v-if="pasante.empresaId" @click="$emit('remove-empresa', pasante.id, pasante.empresaId)"
-                    class="bg-yellow-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-yellow-600 flex items-center justify-center h-9">
-                    <Icon name="uil:trash-alt" class="mr-2" />
+                    class="bg-yellow-500 text-white font-semibold py-6 px-4 rounded-md hover:bg-yellow-600 flex items-center justify-center h-9">
+                    <Icon name="uil:trash-alt" class="mr-2 w-6 h-6" />
                     Remover de empresa
                 </button>
             </div>
