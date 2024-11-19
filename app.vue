@@ -3,6 +3,8 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useCurrentUser } from 'vuefire'
 import { useRouter } from '#app' // Correcta importación desde #app (documentación oficial)
 import { getFirestore, doc, getDoc } from 'firebase/firestore'
+import { LocalNotifications } from '@capacitor/local-notifications'
+import { useFirestoreOperations } from '~/composables/useFirestoreOperations'
 
 const user = useCurrentUser()
 const router = useRouter() // Uso de useRouter desde Nuxt 3
@@ -31,10 +33,23 @@ const handleInitialLoad = async () => {
   isLoading.value = false
 }
 
+// Solicitar permiso de notificaciones
+const solicitarPermisoNotificaciones = async () => {
+  await LocalNotifications.requestPermissions()
+}
+
+// Monitorizar nuevos reportes
+const { monitorNuevoReporte } = useFirestoreOperations()
+
 onMounted(async () => {
   // Manejar la carga inicial
   await handleInitialLoad()
-  
+  // Solicitar permiso de notificaciones
+  await solicitarPermisoNotificaciones()
+  // Monitorizar nuevos reportes si el usuario es un administrador
+  if (user.value && (userRole.value === 'admin')) {
+    monitorNuevoReporte()
+  }
   // Observar cambios en el usuario
   watch(user, async (currentUser, prevUser) => {
     isLoading.value = true
