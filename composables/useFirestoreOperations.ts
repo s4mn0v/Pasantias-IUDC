@@ -12,9 +12,12 @@ import {
     where,
     setDoc,
     getDoc,
-    orderBy
+    orderBy,
+    onSnapshot,
 } from "firebase/firestore";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { LocalNotifications } from "@capacitor/local-notifications";
+import { Preferences } from '@capacitor/preferences';
 
 interface User {
     email: string;
@@ -57,6 +60,58 @@ interface NewUser {
 
 export function useFirestoreOperations() {
     const db = getFirestore();
+
+    // Función para enviar notificación
+async function enviarNotificacion(titulo: string, contenido: string) {
+    const notificationId = Math.floor(Math.random() * 100000); // Genera un entero aleatorio
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          title: titulo,
+          body: "Despliega la notificación para ver más detalles",
+          largeBody: contenido,
+          id: notificationId,
+        },
+      ],
+    });
+  }
+  
+  // Monitor de nuevos reportes para enviar notificaciones
+    async function monitorNuevoReporte() {
+        const reportesRef = collection(db, "reportes");
+    
+        // Obtén la fecha del último reporte notificado o inicialízala
+        let { value: lastNotified } = await Preferences.get({ key: "lastNotifiedDate" });
+        if (!lastNotified) {
+        lastNotified = new Date().toISOString();
+        await Preferences.set({ key: "lastNotifiedDate", value: lastNotified });
+        }
+        const lastNotifiedDate = new Date(lastNotified);
+    
+            onSnapshot(reportesRef, (snapshot) => {
+            snapshot.docChanges().forEach(async (change) => {
+                if (change.type === "added") {
+                const reporte = change.doc.data();
+                const reporteFecha = new Date(reporte.fecha);
+                // Notificar si el reporte es más reciente que la última notificación
+                if (reporteFecha > lastNotifiedDate) {
+                    const preUrgencia = reporte.urgencia;
+                    let urgencia = preUrgencia == "rojo" ? "🔴" : preUrgencia == "amarillo" ? "🟡" : "🟢";
+                    const pasanteDoc = await getDoc(doc(db, "pasantes", reporte.pasanteId));
+                    const empresaDoc = await getDoc(doc(db, "empresas", reporte.empresaId));
+                    if (empresaDoc.exists() && pasanteDoc.exists()) {
+                    await enviarNotificacion(
+                        `Nuevo Reporte ${urgencia}`,
+                        `Pasante: ${pasanteDoc.data().nombre}
+Empresa: ${empresaDoc.data().nombre}`
+                    );
+                    await Preferences.set({ key: "lastNotifiedDate", value: reporteFecha.toISOString() });
+                    }
+                }
+                }
+            });
+        });
+    }  
 
     async function createUser(uid: string, user: User): Promise<void> {
         await setDoc(doc(db, "usuarios", uid), user);
@@ -297,6 +352,7 @@ export function useFirestoreOperations() {
         getReportesPorEmpresa,
         getReportesPorPasante,
         eliminarReporte,
-        crearEmpresaConUsuario
+        crearEmpresaConUsuario,
+        monitorNuevoReporte
     };
 }
