@@ -1,11 +1,9 @@
 <!-- pages/admin/pasantes.vue -->
 <template>
-  <div class="flex font-poppins items-center justify-center min-h-screen w-full bg-gray-100 p-4">
+  <div class="flex font-poppins justify-center w-full p-4">
     <div class="w-full max-w-4xl bg-white rounded-lg shadow-md overflow-hidden relative">
       <div class="relative p-8">
-        <h1 class="text-4xl font-extrabold mb-8 uppercase text-center tracking-wider">
-          Gestión de Pasantes
-        </h1>
+        <h1 class="text-4xl font-extrabold mb-8 uppercase text-center tracking-wider">Pasantes</h1>
         <PasantesSearch @search="updateFilter" />
         <PasantesActions @add-pasante="showAddPopup = true" @upload-xlsx="showUploadPopup = true" />
         <PasantesList 
@@ -16,7 +14,13 @@
           @assign-empresa="assignEmpresa" 
           @remove-empresa="removeEmpresa" 
         />
-        <PasantesPagination :currentPage="currentPage" :totalPages="totalPages" @page-change="changePage" />
+        <PasantesPagination 
+  :currentPage="currentPage" 
+  :totalPages="totalPages" 
+  :itemsPerPage="itemsPerPage"
+  :totalItems="filteredPasantes.length"
+  @page-change="changePage" 
+/>
         <PasantesAddPopup v-if="showAddPopup" @close="showAddPopup = false" @add-pasante="addPasante" />
         <PasantesUploadPopup v-if="showUploadPopup" @close="showUploadPopup = false" @upload-pasantes="uploadPasantes" />
       </div>

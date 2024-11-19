@@ -66,28 +66,31 @@ export function useFirestoreOperations() {
         await deleteDoc(doc(db, "reportes", id));
     }
 
-    async function getEmpresas(): Promise<Empresa[]> {
-        const empresasRef = collection(db, "empresas");
-        const snapshot = await getDocs(empresasRef);
-        return snapshot.docs.map(
-            (doc) =>
-            ({
+    const getEmpresas = async () => {
+        try {
+            const querySnapshot = await getDocs(collection(db, 'empresas'))
+            return querySnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
-            } as Empresa)
-        );
+                pasantes: doc.data().pasantes || []
+            }))
+        } catch (error) {
+            console.error('Error al obtener empresas:', error)
+            throw error
+        }
     }
 
-    async function getPasantes(): Promise<Pasante[]> {
-        const pasantesRef = collection(db, "pasantes");
-        const snapshot = await getDocs(pasantesRef);
-        return snapshot.docs.map(
-            (doc) =>
-            ({
+    const getPasantes = async () => {
+        try {
+            const querySnapshot = await getDocs(collection(db, 'pasantes'))
+            return querySnapshot.docs.map(doc => ({
                 id: doc.id,
-                ...doc.data(),
-            } as Pasante)
-        );
+                ...doc.data()
+            }))
+        } catch (error) {
+            console.error('Error al obtener pasantes:', error)
+            throw error
+        }
     }
 
     async function getReportes(): Promise<Reporte[]> {
@@ -110,15 +113,25 @@ export function useFirestoreOperations() {
         await setDoc(doc(db, 'empresas', uid), empresa);
     }
 
-    async function actualizarEmpresa(
-        id: string,
-        empresa: Partial<Empresa>
-    ): Promise<void> {
-        await updateDoc(doc(db, "empresas", id), empresa);
+    const actualizarEmpresa = async (empresaId: string, datos: any) => {
+        try {
+            const empresaRef = doc(db, 'empresas', empresaId)
+            await updateDoc(empresaRef, datos)
+            return true
+        } catch (error) {
+            console.error('Error al actualizar empresa:', error)
+            throw error
+        }
     }
 
-    async function eliminarEmpresa(id: string): Promise<void> {
-        await deleteDoc(doc(db, "empresas", id));
+    const eliminarEmpresa = async (empresaId: string) => {
+        try {
+            await deleteDoc(doc(db, 'empresas', empresaId))
+            return true
+        } catch (error) {
+            console.error('Error al eliminar empresa:', error)
+            throw error
+        }
     }
 
     async function crearPasante(
@@ -139,43 +152,74 @@ export function useFirestoreOperations() {
         await deleteDoc(doc(db, "pasantes", id));
     }
 
-    async function asignarPasanteAEmpresa(
-        pasanteId: string,
-        empresaId: string,
-        empresaNombre: string
-    ): Promise<void> {
-        const pasanteRef = doc(db, "pasantes", pasanteId);
-        const empresaRef = doc(db, "empresas", empresaId);
+    const asignarPasanteAEmpresa = async (pasanteId: string, empresaId: string, empresaNombre: string) => {
+        try {
+            // 1. Verificar que el pasante existe
+            const pasanteRef = doc(db, 'pasantes', pasanteId)
+            const pasanteDoc = await getDoc(pasanteRef)
 
-        // Check if the pasante is already assigned to a company
-        const pasanteDoc = await getDoc(pasanteRef);
-        if (!pasanteDoc.exists()) {
-            throw new Error("El pasante no existe");
+            if (!pasanteDoc.exists()) {
+                throw new Error('El pasante no existe')
+            }
+
+            // 2. Verificar que la empresa existe
+            const empresaRef = doc(db, 'empresas', empresaId)
+            const empresaDoc = await getDoc(empresaRef)
+
+            if (!empresaDoc.exists()) {
+                throw new Error('La empresa no existe')
+            }
+
+            // 3. Actualizar el pasante con la referencia a la empresa
+            await updateDoc(pasanteRef, {
+                empresaId: empresaId,
+                empresaNombre: empresaNombre
+            })
+
+            // 4. Actualizar la empresa añadiendo el pasante al array
+            const empresaData = empresaDoc.data()
+            const pasantesActuales = empresaData.pasantes || []
+
+            if (!pasantesActuales.includes(pasanteId)) {
+                await updateDoc(empresaRef, {
+                    pasantes: [...pasantesActuales, pasanteId]
+                })
+            }
+
+            return true
+        } catch (error) {
+            console.error('Error al asignar pasante:', error)
+            throw error
         }
-
-        const pasanteData = pasanteDoc.data();
-        if (pasanteData.empresaId) {
-            throw new Error("El pasante ya está asignado a una empresa");
-        }
-
-        // Assign the pasante to the new company
-        await updateDoc(pasanteRef, { empresaId: empresaId });
-        await updateDoc(empresaRef, {
-            pasantes: arrayUnion(pasanteId),
-        });
     }
 
-    async function removerPasanteDeEmpresa(
-        pasanteId: string,
-        empresaId: string
-    ): Promise<void> {
-        const pasanteRef = doc(db, "pasantes", pasanteId);
-        const empresaRef = doc(db, "empresas", empresaId);
+    const removerPasanteDeEmpresa = async (pasanteId: string, empresaId: string) => {
+        try {
+            // 1. Actualizar el pasante removiendo la referencia a la empresa
+            const pasanteRef = doc(db, 'pasantes', pasanteId)
+            await updateDoc(pasanteRef, {
+                empresaId: null,
+                empresaNombre: null
+            })
 
-        await updateDoc(pasanteRef, { empresaId: null });
-        await updateDoc(empresaRef, {
-            pasantes: arrayRemove(pasanteId),
-        });
+            // 2. Actualizar la empresa removiendo el pasante del array
+            const empresaRef = doc(db, 'empresas', empresaId)
+            const empresaDoc = await getDoc(empresaRef)
+
+            if (empresaDoc.exists()) {
+                const empresaData = empresaDoc.data()
+                const pasantesActualizados = empresaData.pasantes.filter((id: string) => id !== pasanteId)
+
+                await updateDoc(empresaRef, {
+                    pasantes: pasantesActualizados
+                })
+            }
+
+            return true
+        } catch (error) {
+            console.error('Error al remover pasante:', error)
+            throw error
+        }
     }
 
     async function crearReporte(reporte: Omit<Reporte, "id">): Promise<string> {

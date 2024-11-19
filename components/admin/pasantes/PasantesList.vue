@@ -1,24 +1,62 @@
-<!-- components/admin/pasantes/PasantesList.vue -->
 <template>
     <div class="space-y-4">
         <div v-for="pasante in pasantes" :key="pasante.id" class="bg-gray-200 rounded-md p-4 shadow-md">
-            <div class="flex justify-between items-center mb-2">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
                 <h2 class="text-lg font-semibold text-gray-800">
-                    {{ pasante.nombre }} - {{ pasante.cedula }}
+                    {{ pasante.nombre }}<span class="hidden sm:inline"> - {{ pasante.cedula }}</span>
                 </h2>
-                <div class="space-x-2 flex">
-                    <button @click="openEditPopup(pasante)"
-                        class="flex items-center justify-center px-4 py-1 text-white bg-blue-600 rounded-full border border-blue-600 hover:text-blue-600 hover:bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
-                        title="Editar pasante">
-                        <Icon name="uil:edit" class="w-5 h-5" />
+
+                <!-- Desplegable con opciones -->
+                <div class="relative">
+                    <button @click="toggleDropdown(pasante.id)" class="text-gray-800 focus:outline-none"
+                        title="Opciones">
+                        <Icon name="uil:ellipsis-h" class="w-6 h-6" />
                     </button>
-                    <button @click="confirmDelete(pasante.id)"
-                        class="flex items-center justify-center px-4 py-1 text-white bg-red-600 rounded-full border border-red-600 hover:text-red-600 hover:bg-transparent focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2"
-                        title="Eliminar pasante">
-                        <Icon name="uil:trash-alt" class="w-5 h-5" />
-                    </button>
+
+                    <!-- Menú desplegable -->
+                    <div v-if="dropdownVisibility[pasante.id]"
+                        class="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded-lg shadow-lg">
+                        <ul class="py-1">
+                            <li>
+                                <button @click="openEditPopup(pasante)"
+                                    class="block px-4 py-2 text-gray-700 w-full text-left hover:bg-gray-200"
+                                    title="Editar pasante">
+                                    Editar
+                                </button>
+                            </li>
+                            <li>
+                                <button @click="confirmDelete(pasante.id)"
+                                    class="block px-4 py-2 text-gray-700 w-full text-left hover:bg-gray-200"
+                                    title="Eliminar pasante">
+                                    Eliminar
+                                </button>
+                            </li>
+
+                            <!-- Cambiar el texto según si el pasante tiene o no empresa asignada -->
+                            <li v-if="!pasante.empresaId">
+                                <button @click="openAssignCompanyPopup(pasante)"
+                                    class="block px-4 py-2 text-gray-700 w-full text-left hover:bg-gray-200"
+                                    title="Asignar empresa">
+                                    Asignar Empresa
+                                </button>
+                            </li>
+                            <li v-else>
+                                <button @click="$emit('remove-empresa', pasante.id, pasante.empresaId)"
+                                    class="block px-4 py-2 text-gray-700 w-full text-left hover:bg-gray-200"
+                                    title="Remover de empresa">
+                                    Remover de empresa
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
+
+            <!-- Información del estudiante: Carrera y semestre -->
+            <p class="text-gray-700 flex items-center sm:hidden">
+                <Icon name="uil:credit-card" class="mr-2 text-purple-600" />
+                {{ pasante.cedula }}
+            </p>
             <p class="text-gray-700 flex items-center">
                 <Icon name="uil:graduation-cap" class="mr-2 text-purple-600" />
                 {{ pasante.carrera }} - Semestre {{ pasante.semestre }}
@@ -31,33 +69,21 @@
                 <Icon name="uil:phone" class="mr-2 text-purple-600" />
                 {{ pasante.celular }}
             </p>
+            <!-- Información adicional: Empresa actual (si tiene) -->
             <p v-if="pasante.empresaId" class="text-gray-700 flex items-center">
                 <Icon name="uil:briefcase" class="mr-2 text-purple-600" />
                 Empresa actual: {{ empresas.find(e => e.id === pasante.empresaId)?.nombre }}
             </p>
-            <div class="mt-2 flex items-center space-x-4">
-                <button @click="openAssignCompanyPopup(pasante)"
-                    class="bg-purple-600 text-white font-semibold py-6 px-4 rounded-md hover:bg-purple-700 flex items-center justify-center h-9"
-                    :title="pasante.empresaId ? 'Cambiar Empresa' : 'Asignar Empresa'">
-                    <Icon :name="pasante.empresaId ? 'uil:sync' : 'uil:building'" class="mr-2 w-6 h-6" />
-                    {{ pasante.empresaId ? 'Cambiar Empresa' : 'Asignar Empresa' }}
-                </button>
-
-                <button v-if="pasante.empresaId" @click="$emit('remove-empresa', pasante.id, pasante.empresaId)"
-                    class="bg-yellow-500 text-white font-semibold py-6 px-4 rounded-md hover:bg-yellow-600 flex items-center justify-center h-9">
-                    <Icon name="uil:trash-alt" class="mr-2 w-6 h-6" />
-                    Remover de empresa
-                </button>
-            </div>
-
         </div>
+
+
         <PasantesAssignCompanyPopup v-if="showAssignCompanyPopup" :empresas="empresas" @assign-empresa="assignEmpresa"
             @close="showAssignCompanyPopup = false" />
         <PasantesEditPopup v-if="showEditPopup" :pasante="currentPasante" @update-pasante="updatePasante"
             @close="showEditPopup = false" />
         <div v-if="showDeleteConfirmation"
             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 m-0" style="margin: 0;">
-            <div class="bg-white p-8 rounded-lg shadow-xl">
+            <div class="bg-white p-8 rounded-lg shadow-xl m-4">
                 <h2 class="text-2xl font-bold mb-4">Confirmar Eliminación</h2>
                 <p class="mb-4">¿Está seguro de que desea eliminar este pasante?</p>
                 <div class="flex space-x-4">
@@ -98,6 +124,22 @@ const showEditPopup = ref(false);
 const showDeleteConfirmation = ref(false);
 const currentPasante = ref(null);
 const pasanteToDeleteId = ref(null);
+
+// Estado para manejar la visibilidad del desplegable de cada pasante
+const dropdownVisibility = ref({});
+
+const toggleDropdown = (pasanteId) => {
+    // Alterna la visibilidad del desplegable para el pasante correspondiente
+    if (dropdownVisibility.value[pasanteId]) {
+        dropdownVisibility.value[pasanteId] = false;
+    } else {
+        // Cierra cualquier otro desplegable abierto
+        for (const id in dropdownVisibility.value) {
+            dropdownVisibility.value[id] = false;
+        }
+        dropdownVisibility.value[pasanteId] = true;
+    }
+};
 
 const openAssignCompanyPopup = (pasante) => {
     currentPasante.value = pasante;
