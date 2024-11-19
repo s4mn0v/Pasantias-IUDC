@@ -145,21 +145,9 @@ function toggleCard(empresaId) {
             class="flex items-center justify-center w-12 min-h-[38px] rounded-full border disabled:cursor-not-allowed disabled:opacity-50 transition ease-in-out duration-150 text-base bg-purple-500 text-white font-medium tracking-wide border-transparent">
             <Icon name="uil:search" class="w-6 h-6" />
           </button>
-
         </div>
-
-        <!-- Botón de Agregar -->
-        <NuxtLink to="./temporal-links">
-          <button
-            class="flex items-center justify-center w-11 h-11 rounded-full border border-gray-300 bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-offset-2 transition-all duration-300">
-            <Icon name="uil:plus-circle" class="w-5 h-5 text-gray-500" />
-          </button>
-        </NuxtLink>
       </div>
-
-
       <p v-if="error" class="text-red-500 mb-4">{{ error }}</p>
-
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div v-for="empresa in paginatedEmpresas" :key="empresa.id" :id="`empresa-${empresa.id}`"
           class="p-4 rounded-lg bg-white shadow-lg">
