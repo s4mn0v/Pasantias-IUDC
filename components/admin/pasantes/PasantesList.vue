@@ -2,17 +2,16 @@
     <div class="space-y-4">
         <div v-for="pasante in pasantes" :key="pasante.id" class="bg-gray-200 rounded-md p-4 shadow-md">
             <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
-                <h2 class="text-lg font-semibold text-gray-800">
-                    {{ pasante.nombre }}<span class="hidden sm:inline"> - {{ pasante.cedula }}</span>
-                </h2>
-
-                <!-- Desplegable con opciones -->
-                <div class="relative">
-                    <button @click="toggleDropdown(pasante.id)" class="text-gray-800 focus:outline-none"
-                        title="Opciones">
+                <div class="flex items-center justify-between w-full">
+                    <h2 class="text-lg font-semibold text-gray-800">
+                        {{ pasante.nombre }}<span class="hidden sm:inline"> - {{ pasante.cedula }}</span>
+                    </h2>
+                    <button @click="toggleDropdown(pasante.id)" class="text-gray-800 focus:outline-none" title="Opciones">
                         <Icon name="uil:ellipsis-h" class="w-6 h-6" />
                     </button>
-
+                </div>
+                <!-- Desplegable con opciones -->
+                <div class="relative">
                     <!-- Menú desplegable -->
                     <div v-if="dropdownVisibility[pasante.id]"
                         class="absolute right-0 mt-2 w-40 bg-white border border-gray-300 rounded-lg shadow-lg">
