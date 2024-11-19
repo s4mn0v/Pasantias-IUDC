@@ -1,16 +1,19 @@
 <!-- components/admin/pasantes/PasantesUploadPopup.vue -->
 <template>
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 m-0">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-            <h2 class="text-2xl font-bold mb-4">Cargar XLSX</h2>
-            <input type="file" accept=".xlsx" @change="handleFileUpload" class="mb-4" />
+        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md m-4">
+            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Cargar XLSX</h2>
+            <input type="file" accept=".xlsx" @change="handleFileUpload" class="mb-6 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 transition duration-200" />
             <div class="flex space-x-4">
+                <!-- Botón de Cargar -->
                 <button @click="uploadFile" :disabled="!file"
-                    class="flex-1 bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="flex-1 bg-green-600 text-white font-semibold py-3 px-6 rounded-md hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition duration-200" title="Cargar">
                     Cargar
                 </button>
+                
+                <!-- Botón de Cancelar -->
                 <button @click="$emit('close')"
-                    class="flex-1 bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-md hover:bg-gray-400">
+                    class="flex-1 bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-md hover:bg-gray-400 focus:ring-2 focus:ring-gray-500 focus:outline-none transition duration-200" title="Cancelar carga">
                     Cancelar
                 </button>
             </div>

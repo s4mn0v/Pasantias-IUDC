@@ -1,7 +1,7 @@
 <!-- components/admin/pasantes/PasantesAddPopup.vue -->
 <template>
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 m-0">
-        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md m-4">
             <h2 class="text-2xl font-bold mb-4">Agregar Pasante</h2>
             <form @submit.prevent="submitForm" class="space-y-4">
                 <!-- Campos del formulario -->

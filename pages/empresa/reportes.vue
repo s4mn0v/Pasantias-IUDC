@@ -43,21 +43,21 @@ async function agregarReporte() {
 
 <template>
   <div
-    class="flex font-poppins items-center justify-center min-h-screen w-full bg-gray-100 p-4"
+    class="flex font-poppins justify-center w-full bg-gray-100 p-4"
   >
     <div
       class="w-full max-w-4xl bg-white rounded-lg shadow-md overflow-hidden relative"
     >
       <!-- Content -->
       <div class="relative p-8">
-        <h1 class="text-3xl font-bold text-center mb-8 uppercase">
-          Gestión de Reportes
+        <h1 class="text-3xl font-bold text-center mb-2 uppercase">
+          Reportes
         </h1>
 
         <!-- Formulario para crear un nuevo reporte -->
         <form @submit.prevent="agregarReporte" class="mb-8 space-y-4">
           <div class="lg:flex lg:space-x-6">
-            <div>
+            <div class="mt-3">
               <label
                 for="pasante"
                 class="block text-sm font-medium text-gray-700 mb-1"
@@ -82,7 +82,7 @@ async function agregarReporte() {
             <div>
               <label
                 for="urgencia"
-                class="block text-sm font-medium text-gray-700 mb-1"
+                class="block text-sm font-medium text-gray-700 mb-1 mt-3"
                 >Urgencia</label
               >
               <select
