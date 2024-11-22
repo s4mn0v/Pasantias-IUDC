@@ -2,6 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
+  ssr: false, // Deshabilitamos SSR para un proyecto SPA
   app: {
     head: {
       link: [
@@ -9,21 +10,25 @@ export default defineNuxtConfig({
       ]
     }
   },
-  ssr: false,
   nitro: {
     experimental: {
-      websocket: true
+      websocket: true // Habilitamos WebSocket solo si es necesario
     },
   },
   vite: {
     server: {
-      hmr: {
+      hmr: process.env.NODE_ENV !== 'production' ? { // HMR solo en desarrollo
         protocol: 'wss',
         port: 3000,
-      }
+      } : false,
     },
   },
-  modules: ['nuxt-vuefire', "@nuxtjs/tailwindcss", "@nuxt/icon", "@pinia/nuxt"],
+  modules: [
+    'nuxt-vuefire', 
+    "@nuxtjs/tailwindcss", 
+    "@nuxt/icon", 
+    "@pinia/nuxt"
+  ],
   vuefire: {
     auth: {
       enabled: true,
@@ -49,15 +54,15 @@ export default defineNuxtConfig({
   },
   icon: {
     serverBundle: {
-      collections: ["uil"],
+      collections: ["uil"], // Personaliza según tus necesidades
     },
   },
   sourcemap: {
-    server: true,
+    server: false, // Deshabilitado en producción para mayor seguridad
     client: false,
   },
   components: {
     global: true,
     dirs: ['~/components']
   },
-})
+});
