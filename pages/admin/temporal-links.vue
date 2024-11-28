@@ -99,10 +99,13 @@ async function deleteLink(linkId) {
         Has alcanzado el límite de 5 enlaces activos, por favor elimina algunos enlaces.
       </div>
 
+      <!-- Mostrar enlace generado -->
       <div v-if="newLinkUrl" class="mt-6">
-        <div class="flex items-center justify-between bg-gray-700 p-4 rounded">
-          <div class="text-white break-all mr-4">{{ newLinkUrl.slice(110) }}</div>
-          <button @click="copyToClipboard(newLinkUrl)"
+        <div class="flex items-center justify-between bg-blue-100 p-4 rounded">
+          <!-- Mostrar todo el enlace sin recortes -->
+          <div class="text-gray-700 break-all mr-4">{{ newLinkUrl }}</div>
+          <button
+            @click="copyToClipboard(newLinkUrl)"
             class="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition duration-300 flex items-center justify-center"
             title="Copiar URL">
             <Icon name="uil:copy" class="w-5 h-5" />
@@ -186,4 +189,4 @@ async function deleteLink(linkId) {
       </div>
     </div>
   </div>
-</template>
+</template> 

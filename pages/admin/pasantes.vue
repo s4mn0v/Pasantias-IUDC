@@ -1,4 +1,3 @@
-<!-- pages/admin/pasantes.vue -->
 <template>
   <div class="flex font-poppins justify-center w-full p-4">
     <div class="w-full max-w-4xl bg-white rounded-lg shadow-md overflow-hidden relative">
@@ -15,14 +14,39 @@
           @remove-empresa="removeEmpresa" 
         />
         <PasantesPagination 
-  :currentPage="currentPage" 
-  :totalPages="totalPages" 
-  :itemsPerPage="itemsPerPage"
-  :totalItems="filteredPasantes.length"
-  @page-change="changePage" 
-/>
-        <PasantesAddPopup v-if="showAddPopup" @close="showAddPopup = false" @add-pasante="addPasante" />
+          :currentPage="currentPage" 
+          :totalPages="totalPages" 
+          :itemsPerPage="itemsPerPage"
+          :totalItems="filteredPasantes.length"
+          @page-change="changePage" 
+        />
+        <PasantesAddPopup v-if="showAddPopup" @close="showAddPopup = false" @add-pasante="confirmAddPasante" />
         <PasantesUploadPopup v-if="showUploadPopup" @close="showUploadPopup = false" @upload-pasantes="uploadPasantes" />
+        
+        <!-- Popup de Confirmación -->
+        <div 
+          v-if="showConfirmPopup" 
+          class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+        >
+          <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+            <h2 class="text-xl font-semibold mb-4">Confirmar Registro</h2>
+            <p class="mb-6">¿Estás seguro de que deseas registrar este pasante?</p>
+            <div class="flex justify-end gap-4">
+              <button 
+                class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400" 
+                @click="cancelAddPasante"
+              >
+                Cancelar
+              </button>
+              <button 
+                class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700" 
+                @click="confirmRegisterPasante"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -38,7 +62,15 @@ import PasantesPagination from '~/components/admin/pasantes/PasantesPagination.v
 import PasantesAddPopup from '~/components/admin/pasantes/PasantesAddPopup.vue';
 import PasantesUploadPopup from '~/components/admin/pasantes/PasantesUploadPopup.vue';
 
-const { getPasantes, getEmpresas, crearPasante, actualizarPasante, eliminarPasante, asignarPasanteAEmpresa, removerPasanteDeEmpresa } = useFirestoreOperations();
+const { 
+  getPasantes, 
+  getEmpresas, 
+  crearPasante, 
+  actualizarPasante, 
+  eliminarPasante, 
+  asignarPasanteAEmpresa, 
+  removerPasanteDeEmpresa 
+} = useFirestoreOperations();
 
 const pasantes = ref([]);
 const empresas = ref([]);
@@ -47,6 +79,8 @@ const currentPage = ref(1);
 const itemsPerPage = 10;
 const showAddPopup = ref(false);
 const showUploadPopup = ref(false);
+const showConfirmPopup = ref(false); // Estado del popup de confirmación
+const selectedPasante = ref(null); // Datos del pasante en proceso de registro
 
 onMounted(async () => {
   pasantes.value = await getPasantes();
@@ -79,10 +113,23 @@ const changePage = (page) => {
   currentPage.value = page;
 };
 
-const addPasante = async (newPasante) => {
-  await crearPasante(newPasante);
-  pasantes.value = await getPasantes();
-  showAddPopup.value = false;
+const confirmAddPasante = (newPasante) => {
+  selectedPasante.value = newPasante; // Guarda los datos del nuevo pasante
+  showConfirmPopup.value = true; // Muestra el popup de confirmación
+};
+
+const cancelAddPasante = () => {
+  selectedPasante.value = null; // Resetea el pasante seleccionado
+  showConfirmPopup.value = false; // Oculta el popup de confirmación
+};
+
+const confirmRegisterPasante = async () => {
+  if (selectedPasante.value) {
+    await crearPasante(selectedPasante.value); // Registra el pasante
+    pasantes.value = await getPasantes(); // Actualiza la lista de pasantes
+  }
+  showConfirmPopup.value = false; // Cierra el popup de confirmación
+  showAddPopup.value = false; // Cierra el popup de registro
 };
 
 const editPasante = async (updatedPasante) => {
